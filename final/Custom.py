@@ -243,60 +243,6 @@ def df_hash_librosa(df, n_fft, hop_length):
     return hashing
 
 
-# class CustomDataset_t(Dataset):
-#     def __init__(self, left_path, right_path, config=None, label=None, mode='train', hashing = None):
-#         self.left_path = left_path
-#         self.right_path = right_path
-#         self.max_len = 800
-#         self.sr = 16000
-#         self.n_mfcc = 128
-#         self.n_fft = 400
-#         self.hop_length = 160
-#         self.mode = mode
-#         self.config = config
-
-#         if self.mode == 'train':
-#             self.label = label
-
-#     def __len__(self):
-#         return len(self.left_path)
-
-#     def wav2image_tensor(self, path) :
-#         audio, sr = librosa.load(path, sr=self.sr)
-#         audio, _ = librosa.effects.trim(audio)
-#         mfcc = librosa.feature.mfcc(audio, sr=self.sr, n_mfcc=self.n_mfcc, n_fft=self.n_fft, hop_length=self.hop_length)
-#         mfcc = sklearn.preprocessing.scale(mfcc, axis=1)
-#         pad2d = lambda a, i: a[:, 0:i] if a.shape[1] > i else np.hstack((a, np.zeros((a.shape[0], i-a.shape[1]))))
-#         padded_mfcc = pad2d(mfcc, self.max_len).reshape(1, self.n_mfcc, self.max_len) #채널 추가
-#         padded_mfcc = torch.tensor(padded_mfcc, dtype=torch.float)
-
-#         return padded_mfcc
-
-#     def __getitem__(self, i):
-#         left_path = self.left_path[i]
-#         right_path = self.right_path[i]
-
-#         left_padded_mfcc = self.wav2image_tensor(left_path)
-#         right_padded_mfcc = self.wav2image_tensor(right_path)
-
-#         padded_mfcc = torch.cat([left_padded_mfcc, right_padded_mfcc], dim=0)
-
-#         if self.mode == 'train':
-#             label = self.label[i]
-
-#             if self.config.BCL:
-#                 label = torch.tensor(label, dtype = torch.float)
-#             else:
-#                 label = torch.tensor(label, dtype=torch.long)
-
-#             return {
-#                 'X': padded_mfcc,
-#                 'Y': label
-#             }
-#         else:
-#             return {
-#                 'X': padded_mfcc
-#             }
 
 def data_split(dataframe, ratio=False):
     '''

@@ -35,14 +35,11 @@ from resnet import resnet50, resnet18, resnet34, resnet101, ResNet_Trans
 from Custom import CustomDataset, data_split, CustomDataset_2output, FinalDataset2output, FinalDatasetTriple, FinalDatasetTriple_infer
 from cnnlstm import SpeechRecognitionModel, SpeechRecognitionModelShamCosine
 from Loss.arcmargin import ArcMarginProduct
-
 from versions import models, loaders, training, validating
-
 from Loss import angleproto, aamsoftmax
 
-print('torch version: ', torch.__version__)
 
-# 경고 무시
+print('torch version: ', torch.__version__)
 warnings.filterwarnings(action='ignore')
 
 # GPU 설정
@@ -56,18 +53,24 @@ else:
     torch.manual_seed(42)
 
 
+
+
 def full_path_df(root_path, df, mode='train'):
+    '''
+        convert path to nsml path
+    '''
+
     # full_path_df = pd.DataFrame({'left_path': root_path + '/' + df['file_name'],
     #                              'right_path': root_path + '/' + df['file_name_']})
-
     df['file_name'] = root_path + '/' + df['file_name']
-    # if mode == 'train':
-    #     full_path_df['label'] = df['label']
     return df
 
 
 def full_path_df_infer(root_path, df):
-    ''' this is for inference'''
+    ''' 
+        convert path to nsml path
+        this is for inference
+    '''
     full_path_df = pd.DataFrame({'left_path': root_path + '/' + df['file_name'],
                                  'right_path': root_path + '/' + df['file_name_']})
 
@@ -76,7 +79,8 @@ def full_path_df_infer(root_path, df):
 
 def max_len_check(df):
     '''
-    for eda
+        To check length of wav
+        For EDA
     '''
     def len_check(path, sr=16000, n_mfcc=100, n_fft=400, hop_length=160):
         audio, sr = librosa.load(path, sr=sr)
@@ -95,31 +99,15 @@ def max_len_check(df):
     return (max(left_max_len, right_max_len))
 
 
-# # hop_length has changed from 160 to 100
-# def wav2image_tensor(path, sr=16000, n_mfcc=128, n_fft=400, hop_length=100, max_len=1000):
-#     audio, sr = librosa.load(path, sr=sr)
-#     audio, _ = librosa.effects.trim(audio)
-#     mfcc = librosa.feature.mfcc(
-#         audio, sr=sr, n_mfcc=n_mfcc, n_fft=n_fft, hop_length=hop_length)
-#     mfcc = sklearn.preprocessing.scale(mfcc, axis=1)
-
-#     def pad2d(a, i): return a[:, 0:i] if a.shape[1] > i \
-#         else np.hstack(
-#         (a, np.zeros((a.shape[0], i-a.shape[1])))
-#     )
-#     padded_mfcc = pad2d(mfcc, max_len).reshape(1, n_mfcc, max_len)  # 채널 추가
-#     padded_mfcc = torch.tensor(padded_mfcc, dtype=torch.float)
-
-#     return padded_mfcc
-
 
 def save_checkpoint(checkpoint, dir):
-
     torch.save(checkpoint, os.path.join(dir))
 
 
 def l_norm(model, l_norm='L1'):
-
+    '''
+        set L norms
+    '''
     if l_norm == 'L1':
         L = torch.tensor(0., requires_grad=True)
         for name, param in model.named_parameters():
@@ -132,14 +120,22 @@ def l_norm(model, l_norm='L1'):
 
 
 def contrastive_loss(y, t):
+    '''
+        custom contrastive_loss
+    '''
     nonmatch = F.relu(3 - y)  # max(margin - y, 0)
     return torch.mean(t * y**2 + (1 - t) * nonmatch**2)
 
 
 def bind_model(model, parser):
-    # 학습한 모델을 저장하는 함수입니다.
+    '''
+        nsml wrapper : wrapping save, load, infer function
+    '''
+
     def save(dir_name, *parser):
-        # directory
+        '''
+            save trained model to nsml system
+        '''
         os.makedirs(dir_name, exist_ok=True)
         save_dir = os.path.join(dir_name, 'checkpoint')
         save_checkpoint(dict_for_infer, save_dir)
@@ -149,9 +145,10 @@ def bind_model(model, parser):
 
         print(f"학습 모델 저장 완료!")
 
-    # 저장한 모델을 불러올 수 있는 함수입니다.
     def load(dir_name, *parser):
-
+        '''
+            load saved model from nsml system
+        '''
         save_dir = os.path.join(dir_name, 'checkpoint')
 
         global checkpoint
@@ -209,6 +206,7 @@ def bind_model(model, parser):
                     pred = torch.tensor(torch.round(torch.sigmoid(
                         pred)), dtype=torch.long).detach().cpu().numpy()
                     preds += list(pred)
+
 
         # tripletloss (11.08 수정)
         elif config.version == 3:
@@ -272,6 +270,7 @@ def bind_model(model, parser):
 
 
 '''
+mel spec - information
 총 63,782 records / 847 speakers / 
 
 count  847.000000
@@ -295,55 +294,50 @@ max    466.000000
 90 :  1082
 '''
 
-'''
-
-mel spec
-
-
-0.99 : 1575
-0.98 : 1425
-0.97 : 1335
-0.96 : 1271
-0.95 : 1226
-0.94 : 1210
-0.93 : 1188
-0.92 : 1156
-
-'''
-
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='nia_test')
-    parser.add_argument('--mode', type=str, default='train')
-    parser.add_argument('--epochs', type=int, default=100)
-    parser.add_argument('--iteration', type=int, default=2)  # on version 5, version 7, Version 9, version 10
-    parser.add_argument('--pause', type=int, default=0)
-    parser.add_argument('--max_grad_norm', default=5.)
+    parser.add_argument('--mode',      type=str, default='train', help = 'relate to nsml system. barely change')
+    parser.add_argument('--epochs',    type=int, default=100,     help = 'number of epochs to train')
+    parser.add_argument('--pause',     type=int, default=0,       help = 'relate to nsml system. barely change')
+    parser.add_argument('--max_grad_norm',       default=5.,      help = 'maximum gradient for gradient clipping')
     # affects to custom.py/ label should be float -> 1
-    # version 2, 4일때만 True // 3일때 False
-    parser.add_argument('--BCL', default=False) # for version 2,4,7
-    # 1:unimodal, 2:sham, 3:tripleLoss  4,  5 : contrasive loss, 7: thin-resnet with anglerLoss, version
+    parser.add_argument('--BCL',      default=False,    help = 'this is used when target is set to be binary. this should be True when version 1,2,4,7') # for version 2,4,7
+    # 1:unimodal, 2:siamness, 3:tripleLoss  4,  5 : contrasive loss, 7: thin-resnet with anglerLoss, version
     # 9  : thin resnet with contrasive loss
     # 10 : thin resnet with arcface loss
-    parser.add_argument('--version', default=3)
-    parser.add_argument('--mel', default=False) # True : version 7,9,10
-    parser.add_argument('--n_mels', default=80) # for version 7, 9, 10
+    parser.add_argument('--version',  default=3,
+        help = 'version 1 : unimodal with BCLoss and input two speakers\
+                version 2 : siamness ResNet model with BCLoss or siamness transformer model with BCLoss and input two speakers\
+                version 3 : ResNet with tripleLoss input one speaker\
+                version 4 : ConvMixer with BCLoss and input two speaker - patches are all you need(ICLR 2021) \
+                version 5 : ResNet with contrasive loss and input two speaker \
+                version 7 : thin-SEResNet with anglerLoss and input two speaker \
+                version 9 : thin-SEResNet with contrasive loss input two speaker \
+                version 10 : this SEResNet pretrain with ArcMargin, get threshold with CrossEntropyLoss, and input one speaker ')
+
+    parser.add_argument('--iteration', type=int, default = 2,       help = 'it works on version 5, 7, 9, 10')
+    parser.add_argument('--mel',                 default = False,   help = 'it works on version 7, 9, 10') # True : version 7,9,10
+    parser.add_argument('--n_mels',    type=int, default = 80,      help = 'it works on version 7, 9, 10') # for version 7, 9, 10
+    parser.add_argument('--learning_rate',       default = 1e-4)
+    parser.add_argument('--batch_size', type=int, default = 128)
+    parser.add_argument('--POC_MODE',             default = False,  help = 'for testing since preprocess is time consuming work')
     config = parser.parse_args()
-    learning_rate = 1e-4
+
+    learning_rate = config.learning_rate
+    batch_size = config.batch_size
+
     scaler = torch.cuda.amp.GradScaler()
-
-    # from versions.py
-    print(config.version)
     model = models(config)
-    bind_model(model=model, parser=config)
-
-    batch_size = 128
+    bind_model(model=model, parser=config)  # related to nsml system
 
 
+    print(config.version)
 
-    if config.pause:
+
+    if config.pause: # related to nsml system
         nsml.paused(scope=locals())
+
 
     if config.mode == 'train':
 
@@ -353,276 +347,294 @@ if __name__ == '__main__':
         train_df = full_path_df(root_path, train_label, mode='test')
 
         '''
+        데이터 프레임의 형태는 아래와 같은 모양이다.
         train_df : root/train/train_data/wav/idx00001, idx00002
-        train_df                       file_name                           speaker
-                    0  /data/final_speaker/train/train_data/wav/idx00...  S000013_1
-                    1  /data/final_speaker/train/train_data/wav/idx00...  S000013_2
+        train_df
+
+                | ind |                   file_name                         |   speaker   |
+                ---------------------------------------------------------------------------
+                |  0  |  /data/final_speaker/train/train_data/wav/idx00...  |  S000013_1  |
+                |  1  |  /data/final_speaker/train/train_data/wav/idx00...  |  S000013_2  |
         '''
 
         print("train_df", train_df.head(3))
         print("train_label", train_label.head(3))
 
-        # kwargs = {'num_workers': 3, 'pin_memory': False}
-        kwargs = {'pin_memory': True}
+        # kwargs = {'num_workers': 3, 'pin_memory': False} # num_workers 옵션으로 인해 가끔 머신이 멈출때가 있다. 
+        kwargs = {'pin_memory': True} 
 
-
-
-        POC_MODE = True
+        #### 전처리에 상당한 시간이 뺏기므로 테스트 용으로 실험해보는 ####
+        POC_MODE = config.POC_Mode
         n_sample = 300
         if POC_MODE:
             # POC & not TripletLoss
             # -> left_padded_mfcc, right_padded_mfcc, label
             if config.version != 3:
-                train_dataloader, valid_dataloader, mfcc_source = loaders(POC_MODE,
-                                                                          config,
-                                                                          batch_size,
-                                                                          n_sample,
-                                                                          train_df)
+                train_dataloader, valid_dataloader, mfcc_source = loaders(POC_MODE, 
+                                                                            config, 
+                                                                            batch_size, 
+                                                                            n_sample, 
+                                                                            train_df)
+
             # POC & TripletLoss
             #  혜인 (21.11.07)
             if config.version == 3:
-                train_dataloader_similarity, train_dataloader, mfcc_source = loaders(POC_MODE,
-                                                                                     config,
-                                                                                     batch_size,
-                                                                                     n_sample,
-                                                                                     train_df)
-            '''POC가 아닌경우 and 
-                1)version 3인 경우, 
-                2)version 3이 아닌경우.'''
+                train_dataloader_similarity, train_dataloader, mfcc_source = loaders(POC_MODE, 
+                                                                            config, 
+                                                                            batch_size, 
+                                                                            n_sample, 
+                                                                            train_df)
 
-        else:
+
+        else: # 실제 트레이닝 할때
             # not POC & not TripletLoss
             if config.version != 3:
-                train_dataloader, valid_dataloader, mfcc_source = loaders(POC_MODE,
-                                                                          config,
-                                                                          batch_size,
-                                                                          n_sample,
-                                                                          train_df)
+                train_dataloader, valid_dataloader, mfcc_source = loaders(POC_MODE, 
+                                                                            config, 
+                                                                            batch_size, 
+                                                                            n_sample, 
+                                                                            train_df)
 
             # not POC & TripletLoss
             #  혜인 (21.11.07)
             #   변경사항 : infer_dataloader, train_dataset 추가
             if config.version == 3:
-                train_dataloader_similarity, train_dataloader,  mfcc_source = loaders(POC_MODE,
-                                                                                      config,
-                                                                                      batch_size,
-                                                                                      n_sample,
-                                                                                      train_df)
+                train_dataloader_similarity, train_dataloader,  mfcc_source = loaders(POC_MODE, 
+                                                                            config, 
+                                                                            batch_size, 
+                                                                            n_sample, 
+                                                                            train_df)
 
-    #     ######################### criterion ##############################
 
-    #     if config.version == 1 or config.version == 2 or config.version == 4 or config.version == 7:
-    #         print(f'criterion : BCEWithLogitsLoss')
-    #         criterion = torch.nn.BCEWithLogitsLoss().to(device)
-    #     if config.version == 5 or config.version == 9:
-    #         criterion = contrastive_loss
-    #         print('criterion : contrasiveLoss')
-    #     if config.version == 8:
-    #         criterion = angleproto()
-    #     # triple margin loss
-    #     if config.version == 3:
-    #         distance = CosineSimilarity()
-    #         reducer = reducers.ThresholdReducer(low=0)
-    #         criterion = losses.TripletMarginLoss(margin=0.1,
-    #                                              distance=distance,
-    #                                              reducer=reducer,
-    #                                              triplets_per_anchor="all")  # margin 0.2 -> 0.05 수정(11.09)
 
-    #         mining_func_easy = miners.TripletMarginMiner(
-    #             margin=0.2, distance=distance, type_of_triplets="easy")
-    #         mining_func_semihard = miners.TripletMarginMiner(
-    #             margin=0.2, distance=distance, type_of_triplets="semihard")
-    #         mining_func_hard = miners.TripletMarginMiner(
-    #             margin=0.2, distance=distance, type_of_triplets="hard")
-    #         mining_funcs = {"mining_func_easy": mining_func_easy,
-    #                         "mining_func_semihard": mining_func_semihard,
-    #                         "mining_func_hard": mining_func_semihard}
-    #         print("criterion : triple margin loss")
-    #     if config.version == 10:
-    #         print('criterion : CrossEntropyLoss')
-    #         criterion = torch.nn.CrossEntropyLoss().to(device)
+        ######################### criterion ################################################################
 
-    #     ########################## optimizer #################################################################
-    #     if config.version == 10:
-    #         margin = ArcMarginProduct(in_feature = 128, 
-    #                                   out_feature = 2,
-    #                                   m = 1.5).to(device)
+        if config.version == 1 or config.version == 2 or config.version == 4 or config.version == 7:
+            # Loss : BCEWithLogitsLoss
+            print(f'criterion : BCEWithLogitsLoss')
+            criterion = torch.nn.BCEWithLogitsLoss().to(device)
 
-    #         optimizer = custom_optim.RAdam([
-    #             {'params':model.parameters()},
-    #             {'params':margin.parameters()}], lr = learning_rate)
+        if config.version == 5 or config.version == 9:
+            # Loss : Contrastive_loss
+            criterion = contrastive_loss
+            print('criterion : contrasiveLoss')
 
-    #     else:
-    #         optimizer = custom_optim.RAdam(model.parameters(), lr=learning_rate)
-    #     ######################################################################################################
+        if config.version == 8:
+            # Loss : angleproto
+            criterion = angleproto()
 
-    #     total_batch = math.ceil(len(train_dataloader))
+        if config.version == 3:
+            # triple margin loss
+            distance = CosineSimilarity()
+            reducer = reducers.ThresholdReducer(low=0)
+            criterion = losses.TripletMarginLoss(margin=0.1,
+                                                 distance=distance,
+                                                 reducer=reducer,
+                                                 triplets_per_anchor="all")  # margin 0.2 -> 0.05 수정(11.09)
 
-    #     print(f'학습 시작! : total_batch - {total_batch}')
+            mining_func_easy = miners.TripletMarginMiner(
+                margin=0.2, distance=distance, type_of_triplets="easy")
+            mining_func_semihard = miners.TripletMarginMiner(
+                margin=0.2, distance=distance, type_of_triplets="semihard")
+            mining_func_hard = miners.TripletMarginMiner(
+                margin=0.2, distance=distance, type_of_triplets="hard")
+            mining_funcs = {"mining_func_easy": mining_func_easy,
+                            "mining_func_semihard": mining_func_semihard,
+                            "mining_func_hard": mining_func_semihard}
+            print("criterion : triple margin loss")
 
-    #     ########################## testing the shape #######################################################
-    #     if config.version == 1:
-    #         print('train_dataloader: ', next(
-    #             iter(train_dataloader))['X'].shape)
+        if config.version == 10:
+            # Loss : CrossEntropyLoss
+            print('criterion : CrossEntropyLoss')
+            criterion = torch.nn.CrossEntropyLoss().to(device)
 
-    #     elif config.version == 2 or config.version == 4 or config.version == 7:
-    #         print('train_dataloader: ', next(iter(train_dataloader))
-    #               ['X_1'].shape)  # [64, 1, 128, 1000]
 
-    #     elif config.version == 3:
-    #         print('train_dataloader: ', next(iter(train_dataloader))
-    #               ['left'].shape)  # [64, 1, 128, 1000]
 
-    #     elif config.version == 5 or config.version == 9 or config.version == 10:
-    #         print('train_dataloader: ', next(iter(train_dataloader))
-    #               ['X_1'].shape)  # [64, 1, 128, 1000]
+        ########################## optimizer #################################################################
+        if config.version == 10:
+            margin = ArcMarginProduct(in_feature = 128, 
+                                      out_feature = 2,
+                                      m = 1.5).to(device)
 
-    #     ########################## training start ###########################################################
-    #     # 여기는 두개의 인풋을 넣는 모델이다.
-    #     if config.version == 1 or config.version == 2 or config.version == 4 or config.version == 7:
-    #         # epoch start
-    #         for epoch in range(config.epochs):
-    #             avg_cost, avg_acc, avg_label, model = training(config=config,
-    #                                                            train_dataloader=train_dataloader,
-    #                                                            model=model,
-    #                                                            optimizer=optimizer,
-    #                                                            criterion=criterion,
-    #                                                            l_norm=l_norm,
-    #                                                            scaler=scaler,
-    #                                                            total_batch=total_batch,
-    #                                                            epoch=epoch)
+            optimizer = custom_optim.RAdam([
+                {'params':model.parameters()},
+                {'params':margin.parameters()}], lr = learning_rate)
 
-    #             model, config = validating(config=config,
-    #                                        valid_dataloader=valid_dataloader,
-    #                                        model=model,
-    #                                        criterion=criterion,
-    #                                        total_batch=total_batch,
-    #                                        epoch=epoch,
-    #                                        avg_cost=avg_cost,
-    #                                        avg_acc=avg_acc,
-    #                                        avg_label=avg_label)
-
-    #             dict_for_infer = {
-    #                 'model': model.state_dict(),
-    #                 'config': config,
-    #             }
-
-    #             # if epoch % 2 == 1:
-    #             nsml.save(epoch)
-
-    #     if config.version == 5 or config.version == 9:
-    #         for epoch in range(config.epochs):
-    #             avg_cost, model = training(config=config,
-    #                                         train_dataloader=train_dataloader,
-    #                                         model=model,
-    #                                         optimizer=optimizer,
-    #                                         criterion=criterion,
-    #                                         l_norm=l_norm,
-    #                                         scaler=scaler,
-    #                                         total_batch=total_batch,
-    #                                         epoch=epoch)
-
-    #             model, config, best_threshold = validating(config=config,
-    #                                                         valid_dataloader=valid_dataloader,
-    #                                                         model=model,
-    #                                                         criterion=criterion,
-    #                                                         total_batch=total_batch,
-    #                                                         epoch=epoch,
-    #                                                         avg_cost=avg_cost)
-
-    #             dict_for_infer = {
-    #                 'model': model.state_dict(),
-    #                 'config': config,
-    #                 'best_threshold':best_threshold,
-    #             }
-
-    #             # if epoch % 2 == 1:
-    #             nsml.save(epoch)
-
-    #     if config.version == 10:
-    #         for epoch in range(config.epochs):
-    #             avg_cost, model = training(config=config,
-    #                                         train_dataloader=train_dataloader,
-    #                                         model=model,
-    #                                         optimizer=optimizer,
-    #                                         criterion=criterion,
-    #                                         l_norm=l_norm,
-    #                                         scaler=scaler,
-    #                                         total_batch=total_batch,
-    #                                         epoch=epoch,
-    #                                         margin = margin)
-
-    #             model, config, best_threshold = validating(config=config,
-    #                                                         valid_dataloader=valid_dataloader,
-    #                                                         model=model,
-    #                                                         criterion=criterion,
-    #                                                         total_batch=total_batch,
-    #                                                         epoch=epoch,
-    #                                                         avg_cost=avg_cost)
-
-    #             dict_for_infer = {
-    #                 'model': model.state_dict(),
-    #                 'config': config,
-    #                 'best_threshold':best_threshold,
-    #             }
-
-    #             # if epoch % 2 == 1:
-    #             nsml.save(epoch)
+        else:
+            optimizer = custom_optim.RAdam(model.parameters(), lr=learning_rate)
 
 
 
 
-    #     # TripletLoss (11.07.혜인)
-    #     if config.version == 3:
-    #         total_batch_sim = math.ceil(len(train_dataloader_similarity))
-    #         total_batch_val = math.ceil(len(train_dataloader))
-    #         for epoch in range(config.epochs):
-    #             model, avg_cost = training(config=config,
-    #                                 model=model,
-    #                                 optimizer=optimizer,
-    #                                 criterion=criterion,
-    #                                 scaler=scaler,
-    #                                 total_batch=total_batch_sim,
-    #                                 epoch=epoch,
-    #                                 train_dataloader=train_dataloader_similarity,
-    #                                 mining_funcs=mining_funcs,
-    #                                 source=mfcc_source)
-    #             print("="*100)
-    #             print(f"[Epoch: {epoch + 1:>4}] training 완료!")
+        ########################## testing the shape #######################################################
+        total_batch = math.ceil(len(train_dataloader))
 
-    #             # test 시간이 오래걸려서 epoch 줄임 (30 배수에서 확인)
-    #             if (epoch + 1) % 30 == 0:
-    #                 print("---------test 시작! -> train_dataloader 수 : ",
-    #                       len(train_dataloader))
-    #                 model, config, best_threshold = validating(config=config,
-    #                                                            valid_dataloader=train_dataloader,
-    #                                                            model=model,
-    #                                                            criterion=None,
-    #                                                            total_batch=total_batch_val,
-    #                                                            epoch=epoch,
-    #                                                            avg_cost=avg_cost,
-    #                                                            avg_acc=None,
-    #                                                            avg_label=None,
-    #                                                            source=mfcc_source
-    #                                                            )
-    #                 print(best_threshold)
-    #                 dict_for_infer = {
-    #                     'model': model.state_dict(),
-    #                     'config': config,
-    #                     'best_threshold': best_threshold
-    #                 }
+        print(f'학습 시작! : total_batch - {total_batch}')
 
-    #                 print(
-    #                     f"---------test 완료! -> best_threshold = {best_threshold} ")
-    #                 # if epoch % 2 == 1:
-    #                 nsml.save(epoch)
+        if config.version == 1:
+            print('train_dataloader: ', next(
+                iter(train_dataloader))['X'].shape)
 
-    # else:
-    #     # kwargs = {'num_workers': 4, 'pin_memory': True}
-    #     kwargs = {'pin_memory': True}
-    #     device = torch.device("cuda:0")
-    #     bind_model(parser=config)
+        elif config.version == 2 or config.version == 4 or config.version == 7:
+            print('train_dataloader: ', next(iter(train_dataloader))
+                  ['X_1'].shape)  # [64, 1, 128, 1000]
 
-    #     # bind_model(model = model, parser=config)
-    #     if config.pause:
-    #         nsml.paused(scope=locals())
+        elif config.version == 3:
+            print('train_dataloader: ', next(iter(train_dataloader))
+                  ['left'].shape)  # [64, 1, 128, 1000]
+
+        elif config.version == 5 or config.version == 9 or config.version == 10:
+            print('train_dataloader: ', next(iter(train_dataloader))
+                  ['X_1'].shape)  # [64, 1, 128, 1000]
+
+
+        ########################## training start ###########################################################
+        # 여기는 두개의 인풋을 넣는 모델이다.
+        if config.version == 1 or config.version == 2 or config.version == 4 or config.version == 7:
+            # epoch start
+            for epoch in range(config.epochs):
+                avg_cost, avg_acc, avg_label, model = training(config=config,
+                                                               train_dataloader=train_dataloader,
+                                                               model=model,
+                                                               optimizer=optimizer,
+                                                               criterion=criterion,
+                                                               l_norm=l_norm,
+                                                               scaler=scaler,
+                                                               total_batch=total_batch,
+                                                               epoch=epoch)
+
+                model, config = validating(config=config,
+                                           valid_dataloader=valid_dataloader,
+                                           model=model,
+                                           criterion=criterion,
+                                           total_batch=total_batch,
+                                           epoch=epoch,
+                                           avg_cost=avg_cost,
+                                           avg_acc=avg_acc,
+                                           avg_label=avg_label)
+
+                dict_for_infer = {
+                    'model': model.state_dict(),
+                    'config': config,
+                }
+
+                nsml.save(epoch) # nsml에 모델을 저장.
+
+
+
+        if config.version == 5 or config.version == 9:
+            for epoch in range(config.epochs):
+                avg_cost, model = training(config=config,
+                                            train_dataloader=train_dataloader,
+                                            model=model,
+                                            optimizer=optimizer,
+                                            criterion=criterion,
+                                            l_norm=l_norm,
+                                            scaler=scaler,
+                                            total_batch=total_batch,
+                                            epoch=epoch)
+
+                model, config, best_threshold = validating(config=config,
+                                                            valid_dataloader=valid_dataloader,
+                                                            model=model,
+                                                            criterion=criterion,
+                                                            total_batch=total_batch,
+                                                            epoch=epoch,
+                                                            avg_cost=avg_cost)
+
+                dict_for_infer = {
+                    'model': model.state_dict(),
+                    'config': config,
+                    'best_threshold':best_threshold,
+                }
+
+                # if epoch % 2 == 1:
+                nsml.save(epoch)
+
+        if config.version == 10:
+            for epoch in range(config.epochs):
+                avg_cost, model = training(config=config,
+                                            train_dataloader=train_dataloader,
+                                            model=model,
+                                            optimizer=optimizer,
+                                            criterion=criterion,
+                                            l_norm=l_norm,
+                                            scaler=scaler,
+                                            total_batch=total_batch,
+                                            epoch=epoch,
+                                            margin = margin)
+
+                model, config, best_threshold = validating(config=config,
+                                                            valid_dataloader=valid_dataloader,
+                                                            model=model,
+                                                            criterion=criterion,
+                                                            total_batch=total_batch,
+                                                            epoch=epoch,
+                                                            avg_cost=avg_cost)
+
+                dict_for_infer = {
+                    'model': model.state_dict(),
+                    'config': config,
+                    'best_threshold':best_threshold,
+                }
+
+                # if epoch % 2 == 1:
+                nsml.save(epoch)
+
+
+
+
+        # TripletLoss (11.07.혜인)
+        if config.version == 3:
+            total_batch_sim = math.ceil(len(train_dataloader_similarity))
+            total_batch_val = math.ceil(len(train_dataloader))
+            for epoch in range(config.epochs):
+                model, avg_cost = training(config=config,
+                                    model=model,
+                                    optimizer=optimizer,
+                                    criterion=criterion,
+                                    scaler=scaler,
+                                    total_batch=total_batch_sim,
+                                    epoch=epoch,
+                                    train_dataloader=train_dataloader_similarity,
+                                    mining_funcs=mining_funcs,
+                                    source=mfcc_source)
+                print("="*100)
+                print(f"[Epoch: {epoch + 1:>4}] training 완료!")
+
+                # test 시간이 오래걸려서 epoch 줄임 (30 배수에서 확인)
+                if (epoch + 1) % 30 == 0:
+                    print("---------test 시작! -> train_dataloader 수 : ",
+                          len(train_dataloader))
+                    model, config, best_threshold = validating(config=config,
+                                                               valid_dataloader=train_dataloader,
+                                                               model=model,
+                                                               criterion=None,
+                                                               total_batch=total_batch_val,
+                                                               epoch=epoch,
+                                                               avg_cost=avg_cost,
+                                                               avg_acc=None,
+                                                               avg_label=None,
+                                                               source=mfcc_source
+                                                               )
+                    print(best_threshold)
+                    dict_for_infer = {
+                        'model': model.state_dict(),
+                        'config': config,
+                        'best_threshold': best_threshold
+                    }
+
+                    print(
+                        f"---------test 완료! -> best_threshold = {best_threshold} ")
+                    # if epoch % 2 == 1:
+                    nsml.save(epoch)
+
+    else:
+        # kwargs = {'num_workers': 4, 'pin_memory': True}
+        kwargs = {'pin_memory': True}
+        device = torch.device("cuda:0")
+        bind_model(parser=config)
+
+        # bind_model(model = model, parser=config)
+        if config.pause:
+            nsml.paused(scope=locals())
