@@ -77,17 +77,20 @@
 This loss combines a Sigmoid layer and the BCELoss in one single class. \
 This version is more numerically stable than using a plain Sigmoid followed by a BCELoss.
 
-$$ L = -(y_i * log\sigma(y') + (1-y_i)*log(1-\sigma(y')) $$
+<img src="./png/2.png"
+     sizes="(min-width: 600px) 100px, 50vw">
 
 where sigma is Sigmoid
 
 ### Constrasive Loss : 방법2
 
-$$ L = 1/2((1-y_i)(D^2) + y_i(max(0, m-D))^2 $$
+<img src="./png/7.png"
+     sizes="(min-width: 600px) 100px, 50vw">
 
 ### Triplet Loss : 방법2
 
-$$ L = max(d(a,p)-d(a,n)+margin, 0) $$
+<img src="./png/8.png"
+     sizes="(min-width: 600px) 100px, 50vw">
 
 (a,p,n) is parameter which means (anchor, positive, negative)
 
