@@ -75,9 +75,9 @@
 #### BCEWITHLOGITSLOSS : 방법1
 
 This loss combines a Sigmoid layer and the BCELoss in one single class. \
-This version is more numerically stable than using a plain Sigmoid followed by a BCELoss.
+This version is more numerically stable than using a plain Sigmoid followed by a BCELoss. \
 
-$$ L = -(y_i * log\sigma(y^hat) + (1-y_i)*log(1-\sigma(y^hat)) $$
+$$ L = -(y_i * log\sigma(y') + (1-y_i)*log(1-\sigma(y')) $$
 
 where sigma is Sigmoid
 
