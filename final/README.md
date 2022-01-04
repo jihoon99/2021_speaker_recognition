@@ -72,7 +72,7 @@
 
 ## Loss Function
 
-### BCEWITHLOGITSLOSS : 방법1
+### BCEWITHLOGITSLOSS with 방법1
 
 This loss combines a Sigmoid layer and the BCELoss in one single class. \
 This version is more numerically stable than using a plain Sigmoid followed by a BCELoss.
@@ -82,19 +82,23 @@ This version is more numerically stable than using a plain Sigmoid followed by a
 
 where sigma is Sigmoid
 
-### Constrasive Loss : 방법2
+---
+
+### Constrasive Loss with 방법2
 
 <img src="./png/7.png"
      sizes="(min-width: 600px) 100px, 50vw">
 
-### Triplet Loss : 방법2
+---
+
+### Triplet Loss with 방법2
 
 <img src="./png/8.png"
      sizes="(min-width: 600px) 100px, 50vw">
 
 (a,p,n) is parameter which means (anchor, positive, negative)
 
-### angleproto
+### angleproto with 방법2
 
 <img src="./png/2.png"
      sizes="(min-width: 600px) 100px, 50vw">
