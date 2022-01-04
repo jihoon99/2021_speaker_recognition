@@ -99,6 +99,12 @@ $$ L = max(d(a,p)-d(a,n)+margin, 0) $$
      sizes="(min-width: 600px) 100px, 50vw">
 
 
+## Optimizer
+RAdam
+
+## Mixed Precision is Used
+Mixed Precision of amp make float32 as float16 to accelerate casting such as Linear, Conv layer, etc.
+
 ## requirement
 
 torch_optimizer
