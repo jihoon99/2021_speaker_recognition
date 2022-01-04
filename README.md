@@ -115,3 +115,7 @@ faiss-gpu
 soundfile
 scipy
 audiomentations
+
+## HardWare
+- Naver clova NSML
+- NVIDIA TITAN 32G
