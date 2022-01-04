@@ -43,7 +43,7 @@
 <img src="./png/6.png"
      sizes="(min-width: 600px) 100px, 50vw">
 
-#### 방법 1 : siamese model
+### 방법 1 : siamese model
 
 | idx | left wav | right wav | label |
 | --- | -------- | --------- | ----: |
@@ -53,7 +53,7 @@
 
 - siamese에 들어가기 위해, 음성 데이터를 쌍으로 묶어준다. 단 imbalance를 피하기 위해 1과 0의 비율을 0.5로 맞추었다.
 
-#### 방법 2 : speaker alone
+### 방법 2 : speaker alone
 
 | idx | wav path | speaker id |
 | --- | -------- | ---------: |
@@ -72,43 +72,46 @@
 
 ## Loss Function
 
-#### BCEWITHLOGITSLOSS : 방법1
+### BCEWITHLOGITSLOSS : 방법1
 
 This loss combines a Sigmoid layer and the BCELoss in one single class. \
 This version is more numerically stable than using a plain Sigmoid followed by a BCELoss.
 
-$$ L = -(y_i * log\sigma(y^hat) + (1-y_i)*log(1-\sigma(y^hat)) $$
+<img src="./png/2.png"
+     sizes="(min-width: 600px) 100px, 50vw">
 
 where sigma is Sigmoid
 
-#### Constrasive Loss : 방법2
+### Constrasive Loss : 방법2
 
-$$ L = 1/2((1-y)_D^2 + y_(max(0, m-D))^2 $$
+<img src="./png/7.png"
+     sizes="(min-width: 600px) 100px, 50vw">
 
-#### Triplet Loss : 방법2
+### Triplet Loss : 방법2
 
-$$ L = max(d(a,p)-d(a,n)+margin, 0) $$
+<img src="./png/8.png"
+     sizes="(min-width: 600px) 100px, 50vw">
 
 (a,p,n) is parameter which means (anchor, positive, negative)
 
-#### angleproto
+### angleproto
 
 <img src="./png/2.png"
      sizes="(min-width: 600px) 100px, 50vw">
 
 ## Model
 
-#### ResNet34
+### ResNet34
 
 <img src="./png/3.png"
      sizes="(min-width: 600px) 100px, 50vw">
 
-#### thin-ResNet with SEBlock
+### thin-ResNet with SEBlock
 
 <img src="./png/4.png"
      sizes="(min-width: 600px) 100px, 50vw">
 
-#### patch is all you need
+### patch is all you need
 
 <img src="./png/5.png"
      sizes="(min-width: 600px) 100px, 50vw">
