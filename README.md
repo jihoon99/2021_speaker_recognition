@@ -78,7 +78,7 @@ This loss combines a Sigmoid layer and the BCELoss in one single class. \
 This version is more numerically stable than using a plain Sigmoid followed by a BCELoss.
 
 <img src="./png/2.png"
-width = '300' height='100'>
+width = '500' height='100'>
 
 where sigma is Sigmoid
 
@@ -87,38 +87,38 @@ where sigma is Sigmoid
 ### Constrasive Loss with 방법2
 
 <img src="./png/7.png"
-width = '300' height='100'>
+width = '500' height='100'>
 
 ---
 
 ### Triplet Loss with 방법2
 
 <img src="./png/8.png"
-width = '300' height='100'>
+width = '500' height='100'>
 
 (a,p,n) is parameter which means (anchor, positive, negative)
 
 ### angleproto with 방법2
 
 <img src="./png/2.png"
-width = '300' height='100'>
+width = '500' height='100'>
 
 ## Model
 
 ### ResNet34
 
 <img src="./png/3.png"
-width = '150' height='100'>
+width = '500' height='300'>
 
 ### thin-ResNet with SEBlock
 
 <img src="./png/4.png"
-width = '150' height='100'>
+width = '500' height='300'>
 
 ### patch is all you need
 
 <img src="./png/5.png"
-width = '150' height='100'>
+width = '500' height='200'>
 
 ## Optimizer
 
