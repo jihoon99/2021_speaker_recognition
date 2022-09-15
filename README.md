@@ -14,13 +14,13 @@
 
 ## Participants
 
-- 2명
+- 2
 
 ## Results
 
-- 예선 : 13등
-- 본선 : 5등
-- 결승 : 9등
+- Qualifiers : 13th
+- MiddleLeague : 5th
+- FinalLeague : 9th
 
 # Summary of Final League
 
@@ -91,13 +91,13 @@ where sigma is Sigmoid
 
 #### Constrasive Loss with Method 2
 
-$L = 1/2((1-y)_D^2 + y_(max(0, m-D))^2$
+<p> $$ L = 1/2((1-y)_D^2 + y_(max(0, m-D))^2 $$ </p>
 
 ---
 
 #### Triplet Loss with Method 2
 
-$$ L = max(d(a,p)-d(a,n)+margin, 0) $$
+<p> $$ L = max(d(a,p)-d(a,n)+margin, 0) $$ </p>
 
 (a,p,n) is parameter which means (anchor, positive, negative) respectively
 
