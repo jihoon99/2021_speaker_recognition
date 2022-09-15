@@ -87,8 +87,6 @@ This version is more numerically stable than using a plain Sigmoid followed by a
 
 where sigma is Sigmoid
 
-where sigma is Sigmoid
-
 ---
 
 #### Constrasive Loss with Method 2
