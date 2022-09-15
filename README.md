@@ -106,7 +106,7 @@ where sigma is Sigmoid
 ### angleproto with Method 2
 
 <img src="./png/2.png"
-width = '500' height='100'>
+width = '800' height='80'>
 
 ---
 
